@@ -1,5 +1,6 @@
 import os
 import io
+import sys
 import random
 import logging
 
@@ -8,16 +9,30 @@ import tweepy
 import requests
 from dotenv import load_dotenv
 
-from playlist_ids import HOLOLIVE_JP
+from playlist_ids import HOLOLIVE_JP, HOLOLIVE_ID, HOLOLIVE_EN
 
 load_dotenv()
+
+arg = sys.argv[1] if len(sys.argv) > 0 else None
+if arg is None:
+    raise Exception("Please specify the argument.")
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s :%(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
-playlist_ids = random.choice(HOLOLIVE_JP)
+match arg.lower():
+    case "jp":
+        playlist_ids = random.choice(HOLOLIVE_JP)
+    case "id":
+        playlist_ids = random.choice(HOLOLIVE_ID)
+    case "en":
+        playlist_ids = random.choice(HOLOLIVE_EN)
+    case _:
+        raise Exception("Please specify the argument.")
+
 logging.info(f"Playlist: {playlist_ids}")
 all_videos = []
 
@@ -68,18 +83,33 @@ else:
 
 logging.info(f"Selected: {video['snippet']['title']}")
 
-auth = tweepy.OAuthHandler(
-    os.getenv("TWITTER_CONSUMER_KEY"), os.getenv("TWITTER_CONSUMER_SECRET")
-)
-auth.set_access_token(
-    os.getenv("TWITTER_ACCESS_TOKEN"), os.getenv("TWITTER_ACCESS_SECRET")
-)
+match arg.lower():
+    case "jp":
+        consumer_key = os.getenv("JP_CONSUMER_KEY")
+        consumer_secret = os.getenv("JP_CONSUMER_SECRET")
+        access_token = os.getenv("JP_ACCESS_TOKEN")
+        access_token_secret = os.getenv("JP_ACCESS_SECRET")
+    case "id":
+        consumer_key = os.getenv("ID_CONSUMER_KEY")
+        consumer_secret = os.getenv("ID_CONSUMER_SECRET")
+        access_token = os.getenv("ID_ACCESS_TOKEN")
+        access_token_secret = os.getenv("ID_ACCESS_SECRET")
+    case "en":
+        consumer_key = os.getenv("EN_CONSUMER_KEY")
+        consumer_secret = os.getenv("EN_CONSUMER_SECRET")
+        access_token = os.getenv("EN_ACCESS_TOKEN")
+        access_token_secret = os.getenv("EN_ACCESS_SECRET")
+    case _:
+        raise Exception("Please specify the argument.")
+
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 client = tweepy.Client(
-    consumer_key=os.getenv("TWITTER_CONSUMER_KEY"),
-    consumer_secret=os.getenv("TWITTER_CONSUMER_SECRET"),
-    access_token=os.getenv("TWITTER_ACCESS_TOKEN"),
-    access_token_secret=os.getenv("TWITTER_ACCESS_SECRET"),
+    consumer_key=consumer_key,
+    consumer_secret=consumer_secret,
+    access_token=access_token,
+    access_token_secret=access_token_secret,
 )
 
 # サムネイル画像をアップロード
