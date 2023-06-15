@@ -11,6 +11,7 @@ import tweepy
 from dotenv import load_dotenv
 
 from playlist_ids import HOLOLIVE_EN, HOLOLIVE_ID, HOLOLIVE_JP
+from libs import DiscordStream
 
 load_dotenv()
 
@@ -22,6 +23,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s :%(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
+    stream=DiscordStream(os.getenv("DISCORD_WEBHOOK_URL")),
 )
 
 match arg.lower():
@@ -48,7 +50,11 @@ for playlist_id in playlist_ids:
         maxResults=50,
     )
     while youtube_query:
-        youtube_response = youtube_query.execute()
+        try:
+            youtube_response = youtube_query.execute()
+        except Exception as e:
+            logging.error(e)
+            raise e
         all_videos += youtube_response["items"]
         youtube_query = youtube.playlistItems().list_next(
             youtube_query, youtube_response
@@ -56,20 +62,24 @@ for playlist_id in playlist_ids:
 
 logging.info(f"Total: {len(all_videos)}")
 
-# 動画の中からランダムに選択（30 分以上で公開）
 sampled_videos = random.sample(all_videos, min(len(all_videos), 50))
 youtube_query = youtube.videos().list(
     part="id,snippet,contentDetails,liveStreamingDetails",
     id=",".join([video["snippet"]["resourceId"]["videoId"] for video in sampled_videos]),
     maxResults=50,
 )
-youtube_response = youtube_query.execute()
+try:
+    youtube_response = youtube_query.execute()
+except Exception as e:
+    logging.error(e)
+    raise e
 filtered_videos = [
     video
     for video in youtube_response["items"]
     if isodate.parse_duration(video["contentDetails"]["duration"]) >= isodate.parse_duration("PT30M")
 ]
 if len(filtered_videos) == 0:
+    logging.warning("No videos longer than 30 minutes.")
     video = random.choice(youtube_response["items"])
 video = random.choice(filtered_videos)
 logging.info(f"Selected: {video['snippet']['title']}")
@@ -93,20 +103,28 @@ match arg.lower():
     case _:
         raise Exception("Please specify the argument.")
 
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-api = tweepy.API(auth)
-client = tweepy.Client(
-    consumer_key=consumer_key,
-    consumer_secret=consumer_secret,
-    access_token=access_token,
-    access_token_secret=access_token_secret,
-)
+try:
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_token, access_token_secret)
+    api = tweepy.API(auth)
+    client = tweepy.Client(
+        consumer_key=consumer_key,
+        consumer_secret=consumer_secret,
+        access_token=access_token,
+        access_token_secret=access_token_secret,
+    )
+except Exception as e:
+    logging.error(e)
+    raise e
 
 # サムネイル画像をアップロード
-thumbnail_url = video["snippet"]["thumbnails"]["maxres"]["url"]
-with requests.get(thumbnail_url) as r:
-    media = api.media_upload(filename="thumbnail.jpg", file=io.BytesIO(r.content))
+try:
+    thumbnail_url = video["snippet"]["thumbnails"]["maxres"]["url"]
+    with requests.get(thumbnail_url) as r:
+        media = api.media_upload(filename="thumbnail.jpg", file=io.BytesIO(r.content))
+except Exception as e:
+    logging.error(e)
+    raise e
 
 # ツイート
 if "liveStreamingDetails" not in video.keys():
@@ -118,5 +136,9 @@ else:
         f'{video["liveStreamingDetails"]["actualStartTime"]}\n' \
         f'https://youtu.be/{video["id"]}'
 
-r = client.create_tweet(text=tweet, media_ids=[media.media_id])
-logging.info(f"Tweeted: {r}")
+try:
+    r = client.create_tweet(text=tweet, media_ids=[media.media_id])
+except Exception as e:
+    logging.error(e)
+else:
+    logging.info(f"Tweeted: {tweet}")

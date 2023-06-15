@@ -9,7 +9,7 @@ HOLOLIVE_JP = [
     ['UUD8HOxPs4Xvsm8H0ZxXGiBw'],  # Yozora Mel
     ['UUdn5BQ06XqgXoAxIhbqw5Rg'],  # Shirakami Fubuki
     ['UUQ0UDLQCjY0rmuxCDE38FGg'],  # Natsuiro Matsuri
-    ['UULbtM3JZfRTg8v2KGag-RMw'],  # Aki Rosenthal (UULbtM3JZfRTg8v2KGag-RMw)
+    ['UUFTLzh12_nrtzqBPsTCqenA'],  # Aki Rosenthal (UULbtM3JZfRTg8v2KGag-RMw)
     ['UU1CfXB_kRs3C-zaeTG3oGyg', 'UUHj_mh57PVMXhAUDphUQDFA'],  # Akai Haato
     # 2nd Gen
     ['UU1opHUrw8rvnsadT-iGp7Cg'],  # Minato Aqua
