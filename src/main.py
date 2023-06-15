@@ -117,6 +117,6 @@ else:
     tweet = f'{video["snippet"]["title"]}\n' \
         f'{video["liveStreamingDetails"]["actualStartTime"]}\n' \
         f'https://youtu.be/{video["id"]}'
-# r = client.create_tweet(text=tweet, media_ids=[media.media_id])
-print(tweet)
-# logging.info(f"Tweeted: {r}")
+
+r = client.create_tweet(text=tweet, media_ids=[media.media_id])
+logging.info(f"Tweeted: {r}")
