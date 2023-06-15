@@ -1,19 +1,20 @@
-import os
 import io
-import sys
-import random
 import logging
+import os
+import random
+import sys
 
 import googleapiclient.discovery
-import tweepy
+import isodate
 import requests
+import tweepy
 from dotenv import load_dotenv
 
-from playlist_ids import HOLOLIVE_JP, HOLOLIVE_ID, HOLOLIVE_EN
+from playlist_ids import HOLOLIVE_EN, HOLOLIVE_ID, HOLOLIVE_JP
 
 load_dotenv()
 
-arg = sys.argv[1] if len(sys.argv) > 0 else None
+arg = sys.argv[1] if len(sys.argv) > 1 else None
 if arg is None:
     raise Exception("Please specify the argument.")
 
@@ -55,32 +56,22 @@ for playlist_id in playlist_ids:
 
 logging.info(f"Total: {len(all_videos)}")
 
-# 動画の中からランダムに選択（公開済みの配信アーカイブのみ）
-# 配信アーカイブかどうかは youtube.videos().list() で取得できる liveStreamingDetails で判定
-videos = random.sample(all_videos, min(len(all_videos), 50))
+# 動画の中からランダムに選択（30 分以上で公開）
+sampled_videos = random.sample(all_videos, min(len(all_videos), 50))
 youtube_query = youtube.videos().list(
-    part="id,snippet,liveStreamingDetails,status",
-    id=",".join([video["snippet"]["resourceId"]["videoId"] for video in videos]),
+    part="id,snippet,contentDetails,liveStreamingDetails",
+    id=",".join([video["snippet"]["resourceId"]["videoId"] for video in sampled_videos]),
     maxResults=50,
 )
 youtube_response = youtube_query.execute()
-videos = [
+filtered_videos = [
     video
     for video in youtube_response["items"]
-    if video["status"]["privacyStatus"] == "public" \
+    if isodate.parse_duration(video["contentDetails"]["duration"]) >= isodate.parse_duration("PT30M")
 ]
-archives = [
-    video
-    for video in videos
-    if "liveStreamingDetails" in video.keys() \
-        and "activeLiveChatId" not in video["liveStreamingDetails"].keys()
-]
-
-if len(archives) == 0:
-    video = random.choice(videos)
-else:
-    video = random.choice(archives)
-
+if len(filtered_videos) == 0:
+    video = random.choice(youtube_response["items"])
+video = random.choice(filtered_videos)
 logging.info(f"Selected: {video['snippet']['title']}")
 
 match arg.lower():
@@ -119,8 +110,13 @@ with requests.get(thumbnail_url) as r:
 
 # ツイート
 if "liveStreamingDetails" not in video.keys():
-    tweet = f'{video["snippet"]["title"]}\n{video["snippet"]["publishedAt"]}\nhttps://youtu.be/{video["id"]}'
+    tweet = f'{video["snippet"]["title"]}\n' \
+        f'{video["snippet"]["publishedAt"]}\n' \
+        f'https://youtu.be/{video["id"]}'
 else:
-    tweet = f'{video["snippet"]["title"]}\n{video["liveStreamingDetails"]["actualStartTime"]}\nhttps://youtu.be/{video["id"]}'
-r = client.create_tweet(text=tweet, media_ids=[media.media_id])
-logging.info(f"Tweeted: {r}")
+    tweet = f'{video["snippet"]["title"]}\n' \
+        f'{video["liveStreamingDetails"]["actualStartTime"]}\n' \
+        f'https://youtu.be/{video["id"]}'
+# r = client.create_tweet(text=tweet, media_ids=[media.media_id])
+print(tweet)
+# logging.info(f"Tweeted: {r}")
