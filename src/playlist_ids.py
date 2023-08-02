@@ -63,7 +63,7 @@ HOLOLIVE_ID = [
 ]
 
 HOLOLIVE_EN = [
-    # -Myth-
+    # Myth
     ['UUL_qhgtOy0dy1Agp8vkySQg'],  # Mori Calliope
     ['UUHsx4Hqa-1ORjQTh9TYDhww', 'UUq4ky2drohLT7W0DmDEw1dQ'],  # Takanashi Kiara
     ['UUMwGHR0BTZuLsmjY_NT5Pwg'],  # Ninomae Ina’nis
@@ -77,4 +77,9 @@ HOLOLIVE_EN = [
     ['UUmbs8T6MWqUHP1tIQvSgKrg'],  # Ouro Kronii
     ['UU3n5uGu18FoCy23ggWWp8tA'],  # Nanashi Mumei
     ['UUgmPnx-EEeOrZSg5Tiw7ZRQ'],  # Hakos Baelz
+    # Advent
+    ['UCgnfPPb9JI3e9A4cXHnWbyg'], # Shiori Novella
+    ['UC9p_lqQ0FEDz327Vgf5JwqA'], # Koseki Bijou
+    ['UC_sFNM0z0MWm9A6WlKPuMMg'], # Nerissa Ravoncroft
+    ['UCt9H_RpQzhxzlyBxFqrdHqA'], # FUWAMOCO
 ]
