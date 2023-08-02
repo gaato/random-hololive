@@ -78,8 +78,8 @@ HOLOLIVE_EN = [
     ['UU3n5uGu18FoCy23ggWWp8tA'],  # Nanashi Mumei
     ['UUgmPnx-EEeOrZSg5Tiw7ZRQ'],  # Hakos Baelz
     # Advent
-    ['UCgnfPPb9JI3e9A4cXHnWbyg'], # Shiori Novella
-    ['UC9p_lqQ0FEDz327Vgf5JwqA'], # Koseki Bijou
-    ['UC_sFNM0z0MWm9A6WlKPuMMg'], # Nerissa Ravoncroft
-    ['UCt9H_RpQzhxzlyBxFqrdHqA'], # FUWAMOCO
+    ['UUgnfPPb9JI3e9A4cXHnWbyg'], # Shiori Novella
+    ['UU9p_lqQ0FEDz327Vgf5JwqA'], # Koseki Bijou
+    ['UU_sFNM0z0MWm9A6WlKPuMMg'], # Nerissa Ravoncroft
+    ['UUt9H_RpQzhxzlyBxFqrdHqA'], # FUWAMOCO
 ]
