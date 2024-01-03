@@ -1,6 +1,5 @@
 import requests
 
-
 USER_ID = 572432137035317249
 
 
@@ -9,6 +8,7 @@ class DiscordStream:
         self.url = url
 
     def write(self, text):
+        print(text)
         if "ERROR" in text:
             content = f"<@!{USER_ID}>\n```diff\n- {text}\n```"
         elif "WARNING" in text:
