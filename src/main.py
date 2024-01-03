@@ -3,6 +3,7 @@ import logging
 import os
 import random
 import sys
+from typing import Any, Optional
 
 import googleapiclient.discovery
 import isodate
@@ -10,8 +11,10 @@ import requests
 import tweepy
 from dotenv import load_dotenv
 
-from playlist_ids import HOLOLIVE_EN, HOLOLIVE_ID, HOLOLIVE_JP
 from libs import DiscordStream
+from playlist_ids import HOLOLIVE_EN, HOLOLIVE_ID, HOLOLIVE_JP
+
+load_dotenv()
 
 
 class YouTubeDataFetcher:
@@ -73,6 +76,33 @@ class YouTubeDataFetcher:
         return youtube_response["items"]
 
 
+class HolodexDataFetcher:
+    BASE_URL = "https://holodex.net/api/v2"
+
+    def __init__(self) -> None:
+        """Initializes the HolodexDataFetcher."""
+        self.key = os.getenv("HOLODEX_API_KEY")
+
+    def get_clips(self, video_id: str) -> list[dict[str, Any]]:
+        """
+        Retrieves clips of specified video.
+
+        Args:
+            video_id: The ID of the video.
+
+        Returns:
+            List of clips (each clip is a dictionary).
+        """
+        with requests.get(
+            f"{self.BASE_URL}/videos/{video_id}",
+            headers={"X-APIKEY": self.key},
+        ) as r:
+            if r.status_code != 200:
+                logging.error(f"Failed to get clips: {r.status_code}")
+                raise Exception(f"Failed to get clips: {r.status_code}")
+            return r.json().get("clips", [])
+
+
 class TwitterPoster:
     def __init__(
         self,
@@ -104,25 +134,33 @@ class TwitterPoster:
             logging.error(e)
             raise e
 
-    def post_tweet(self, text: str, media_ids: list[str]) -> bool:
+    def post_tweet(
+        self,
+        text: str,
+        media_ids: list[str] = [],
+        reply_to: str | int = None,
+    ) -> Optional[tweepy.Response]:
         """
         Posts a tweet with specified text and media IDs.
 
         Args:
             text: The text of the tweet.
             media_ids: List of media IDs to attach to the tweet.
+            reply_to: The ID of the tweet to reply to.
 
         Returns:
             True if the tweet was posted successfully, False otherwise.
         """
         try:
-            r = self.client.create_tweet(text=text, media_ids=media_ids)
+            result = self.client.create_tweet(
+                text=text, media_ids=media_ids, in_reply_to_tweet_id=reply_to
+            )
         except Exception as e:
             logging.error(e)
-            return False
+            return None
         else:
             logging.info(f"Tweeted: {text}")
-            return True
+            return result
 
 
 class RandomHololive:
@@ -130,6 +168,7 @@ class RandomHololive:
         """Initializes the YouTubeDataFetcher."""
         load_dotenv()
         self.youtube_fetcher = YouTubeDataFetcher()
+        self.holodex_fetcher = HolodexDataFetcher()
 
     def load_env_and_args(self) -> None:
         """Loads environment variables and command-line arguments."""
@@ -214,20 +253,58 @@ class RandomHololive:
 
         # Create tweet
         if "liveStreamingDetails" not in self.video.keys():
-            tweet = (
+            source_post_text = (
                 f'{self.video["snippet"]["title"]}\n'
                 f'{self.video["snippet"]["publishedAt"]}\n'
                 f'https://youtu.be/{self.video["id"]}'
             )
         else:
-            tweet = (
+            source_post_text = (
                 f'{self.video["snippet"]["title"]}\n'
                 f'{self.video["liveStreamingDetails"]["actualStartTime"]}\n'
                 f'https://youtu.be/{self.video["id"]}'
             )
 
-        # Post tweet
-        self.twitter_poster.post_tweet(tweet, [media.media_id])
+        source_post = self.twitter_poster.post_tweet(source_post_text, [media.media_id])
+
+        if source_post is None:
+            logging.error("Failed to post a source tweet.")
+            raise Exception("Failed to post a source tweet.")
+        if "liveStreamingDetails" not in self.video.keys():
+            return
+
+        # Create clip tweet
+        clips = self.holodex_fetcher.get_clips(self.video["id"])
+        if len(clips) == 0:
+            return
+        # Upload thumbnail image
+        try:
+            clip = self.youtube_fetcher.get_video_details([clips[0]["id"]])[0]
+            thumbnail_url = clip["snippet"]["thumbnails"]["maxres"]["url"]
+            with requests.get(thumbnail_url) as r:
+                media = self.twitter_poster.api.media_upload(
+                    filename="thumbnail.jpg", file=io.BytesIO(r.content)
+                )
+        except Exception as e:
+            logging.error(e)
+            raise e
+
+        clip_post_text = (
+            f'A clip by {clips[0]["channel"]["name"]}\n'
+            f'{clip["snippet"]["title"]}\n'
+            f'{clip["snippet"]["publishedAt"]}\n'
+            f'https://youtu.be/{clips[0]["id"]}'
+        )
+        try:
+            clip_post = self.twitter_poster.post_tweet(
+                clip_post_text, [media.media_id], source_post.data["id"]
+            )
+        except Exception as e:
+            logging.error(e)
+            raise e
+        if clip_post is None:
+            logging.error("Failed to post a clip tweet.")
+            raise Exception("Failed to post a clip tweet.")
 
 
 if __name__ == "__main__":
