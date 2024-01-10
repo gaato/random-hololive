@@ -12,7 +12,7 @@ import tweepy
 from dotenv import load_dotenv
 
 from libs import DiscordStream
-from playlist_ids import HOLOLIVE_EN, HOLOLIVE_ID, HOLOLIVE_JP
+from playlist_ids import HOLOLIVE_DEV_IS, HOLOLIVE_EN, HOLOLIVE_ID, HOLOLIVE_JP
 
 load_dotenv()
 
@@ -202,6 +202,12 @@ class RandomHololive:
                 self.consumer_secret = os.getenv("EN_CONSUMER_SECRET")
                 self.access_token = os.getenv("EN_ACCESS_TOKEN")
                 self.access_token_secret = os.getenv("EN_ACCESS_SECRET")
+            case "dev_is":
+                self.playlist_ids = random.choice(HOLOLIVE_DEV_IS)
+                self.consumer_key = os.getenv("DEV_IS_CONSUMER_KEY")
+                self.consumer_secret = os.getenv("DEV_IS_CONSUMER_SECRET")
+                self.access_token = os.getenv("DEV_IS_ACCESS_TOKEN")
+                self.access_token_secret = os.getenv("DEV_IS_ACCESS_SECRET")
             case _:
                 raise Exception("Please specify the argument.")
 
