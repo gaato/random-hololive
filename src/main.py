@@ -248,7 +248,9 @@ class RandomHololive:
 
         # Upload thumbnail image
         try:
-            thumbnail_url = self.video["snippet"]["thumbnails"]["maxres"]["url"]
+            thumbnail_url = self.video["snippet"]["thumbnails"].get(
+                "maxres", self.video["snippet"]["thumbnails"]["default"]
+            )["url"]
             with requests.get(thumbnail_url) as r:
                 media = self.twitter_poster.api.media_upload(
                     filename="thumbnail.jpg", file=io.BytesIO(r.content)
