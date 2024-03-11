@@ -288,7 +288,7 @@ class RandomHololive:
         # Upload thumbnail image
         try:
             clip = self.youtube_fetcher.get_video_details([clips[0]["id"]])[0]
-            thumbnail_url = self.video["snippet"]["thumbnails"].get(
+            thumbnail_url = clip["snippet"]["thumbnails"][.get(
                 "maxres", self.video["snippet"]["thumbnails"]["default"]
             )["url"]
             with requests.get(thumbnail_url) as r:
