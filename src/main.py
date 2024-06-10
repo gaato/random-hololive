@@ -246,11 +246,15 @@ class RandomHololive:
         self.load_env_and_args()
         self.sample_videos()
 
+        resolutions = ["maxres", "standard", "high", "medium", "default"]
+
         # Upload thumbnail image
         try:
-            thumbnail_url = self.video["snippet"]["thumbnails"].get(
-                "maxres", self.video["snippet"]["thumbnails"]["default"]
-            )["url"]
+            thumbnails = self.video["snippet"]["thumbnails"]
+            thumbnail_url = next(
+                (thumbnails[res]["url"] for res in resolutions if res in thumbnails),
+                None,
+            )
             with requests.get(thumbnail_url) as r:
                 media = self.twitter_poster.api.media_upload(
                     filename="thumbnail.jpg", file=io.BytesIO(r.content)
@@ -288,9 +292,11 @@ class RandomHololive:
         # Upload thumbnail image
         try:
             clip = self.youtube_fetcher.get_video_details([clips[0]["id"]])[0]
-            thumbnail_url = clip["snippet"]["thumbnails"].get(
-                "maxres", self.video["snippet"]["thumbnails"]["default"]
-            )["url"]
+            thumbnails = clip["snippet"]["thumbnails"]
+            thumbnail_url = next(
+                (thumbnails[res]["url"] for res in resolutions if res in thumbnails),
+                None,
+            )
             with requests.get(thumbnail_url) as r:
                 media = self.twitter_poster.api.media_upload(
                     filename="thumbnail.jpg", file=io.BytesIO(r.content)
