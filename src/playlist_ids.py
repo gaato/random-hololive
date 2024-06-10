@@ -6,7 +6,7 @@ HOLOLIVE_JP = [
     ["UU0TXe_LYZ4scaW2XMyi5_kw"],  # AZKi
     ["UU5CwaMl1eIgY8h02uZw7u8A"],  # Hoshimachi Suisei
     # Gen 1
-    ["UUD8HOxPs4Xvsm8H0ZxXGiBw"],  # Yozora Mel
+    # ["UUD8HOxPs4Xvsm8H0ZxXGiBw"],  # Yozora Mel
     ["UUdn5BQ06XqgXoAxIhbqw5Rg"],  # Shirakami Fubuki
     ["UUQ0UDLQCjY0rmuxCDE38FGg"],  # Natsuiro Matsuri
     ["UUFTLzh12_nrtzqBPsTCqenA"],  # Aki Rosenthal (UULbtM3JZfRTg8v2KGag-RMw)
